@@ -33,7 +33,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    for (int i = 0; i < 8; i++) {
+    for (int i = 1; i < 7; i++) {
       board[0][i] = 1;
       board[7][i] = 1;
       board[i][0] = -1;
@@ -73,7 +73,7 @@ class _GameScreenState extends State<GameScreen> {
     else if (val == -1)
       color = Colors.white;
     else
-      color = Colors.grey.shade300;
+      color = Color.fromARGB(255, 161, 142, 127);
 
     return GestureDetector(
       onTap: () {
