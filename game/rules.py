@@ -1,3 +1,5 @@
+import numpy as np
+from copy import deepcopy
 from game.board import EMPTY, BOARD_SIZE
 
 def count_pieces_in_direction(board, x, y, dx, dy):
@@ -30,3 +32,26 @@ def generate_moves(board, player):
                             moves.append(((x, y), (nx, ny)))
     return moves
 
+
+def apply_move(board, move):
+    ((from_x, from_y), (to_x, to_y)) = move
+
+    # Determine if the board is a NumPy array
+    if isinstance(board, np.ndarray):
+        new_board = board.copy()
+    else:
+        new_board = deepcopy(board)
+
+    player = (
+        board[from_x][from_y]
+        if not isinstance(board, np.ndarray)
+        else board[from_x, from_y]
+    )
+
+    # Remove piece from old position
+    new_board[from_x][from_y] = 0
+
+    # Place piece in new position
+    new_board[to_x][to_y] = player
+
+    return new_board

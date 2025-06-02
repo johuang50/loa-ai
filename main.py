@@ -1,6 +1,5 @@
 from game.board import initial_board, BLACK, WHITE, make_move
 from ai.minimax import minimax
-from ai.heuristic import heuristic
 from game.rules import generate_moves
 import copy
 
@@ -65,7 +64,7 @@ def main():
             move = get_human_move(board, human)
         else:
             _, move = minimax(copy.deepcopy(board), depth=3, player=ai, alpha=float('-inf'),
-                              beta=float('inf'), maximizing=True, evaluate=heuristic)
+                              beta=float('inf'), maximizing=True)
             print("AI chooses:", move)
 
         board = make_move(board, move)
