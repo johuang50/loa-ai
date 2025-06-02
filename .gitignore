@@ -1,2 +1,6 @@
 .venv/
 
+# Cython
+build/
+*.c
+*.so
