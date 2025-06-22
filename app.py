@@ -18,7 +18,7 @@ def get_ai_move():
     # Call your existing search algorithm
     _, best_move = minimax(
         board,
-        depth=3,  # Adjust depth as needed
+        depth=4,  # Adjust depth as needed
         alpha=float("-inf"),
         beta=float("inf"),
         maximizing=True,

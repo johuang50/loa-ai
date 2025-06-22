@@ -82,7 +82,7 @@ class _GameScreenState extends State<GameScreen> {
   Offset calculateGridPosition(RenderBox box, Offset globalPosition) {
     Offset localPosition = box.globalToLocal(globalPosition);
     double squareSize = box.size.width / 8;
-    int x = (localPosition.dy / squareSize).floor();
+    int x = (localPosition.dy / squareSize).floor() - 2;
     int y = (localPosition.dx / squareSize).floor();
     return Offset(x.toDouble(), y.toDouble());
   }
