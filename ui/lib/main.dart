@@ -27,23 +27,28 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  List<List<int>> board = List.generate(8, (_) => List.filled(8, 0));
+  late List<List<int>> board;
+  Offset? tapStart;
 
-  // Example initial positions: black on top/bottom row, white on left/right columns
   @override
   void initState() {
     super.initState();
+    board = initializeBoard();
+  }
+
+  List<List<int>> initializeBoard() {
+    List<List<int>> newBoard = List.generate(8, (_) => List.filled(8, 0));
     for (int i = 1; i < 7; i++) {
-      board[0][i] = 1;
-      board[7][i] = 1;
-      board[i][0] = -1;
-      board[i][7] = -1;
+      newBoard[0][i] = 1;
+      newBoard[7][i] = 1;
+      newBoard[i][0] = -1;
+      newBoard[i][7] = -1;
     }
+    return newBoard;
   }
 
   Future<void> getAIMove() async {
-    final url =
-        Uri.parse('http://localhost:5000/move'); // Change if hosted elsewhere
+    final url = Uri.parse('http://127.0.0.1:5050/move'); // Change if hosted elsewhere
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -55,30 +60,81 @@ class _GameScreenState extends State<GameScreen> {
       final move = data['move']; // [from_x, from_y, to_x, to_y]
 
       setState(() {
-        int fromX = move[0], fromY = move[1], toX = move[2], toY = move[3];
-        int piece = board[fromX][fromY];
-        board[fromX][fromY] = 0;
-        board[toX][toY] = piece;
+        applyMove(move[0][0], move[0][1], move[1][0], move[1][1]);
       });
     } else {
       print('AI error: ${response.body}');
     }
   }
 
+  void applyMove(int fromX, int fromY, int toX, int toY) {
+    int piece = board[fromX][fromY];
+    board[fromX][fromY] = 0;
+    board[toX][toY] = piece;
+  }
+
+  void registerHumanMove(int fromX, int fromY, int toX, int toY) {
+    setState(() {
+      applyMove(fromX, fromY, toX, toY);
+    });
+  }
+
+  Offset calculateGridPosition(RenderBox box, Offset globalPosition) {
+    Offset localPosition = box.globalToLocal(globalPosition);
+    double squareSize = box.size.width / 8;
+    int x = (localPosition.dy / squareSize).floor();
+    int y = (localPosition.dx / squareSize).floor();
+    return Offset(x.toDouble(), y.toDouble());
+  }
+
   Widget buildSquare(int x, int y) {
     int val = board[x][y];
     Color color;
-    if (val == 1)
+    if (val == 1) {
       color = Colors.black;
-    else if (val == -1)
+    } else if (val == -1) {
       color = Colors.white;
-    else
-      color = Color.fromARGB(255, 161, 142, 127);
+    } else {
+      color = const Color.fromARGB(255, 161, 142, 127);
+    }
+
+    Offset? tapStart;
+    Offset? lastKnownPosition;
 
     return GestureDetector(
-      onTap: () {
-        // For now: just print location tapped
-        print('Tapped ($x, $y)');
+      onTapDown: (details) {
+        // Capture the initial touch position immediately
+        RenderBox box = context.findRenderObject() as RenderBox;
+        tapStart = calculateGridPosition(box, details.globalPosition);
+        lastKnownPosition =
+            details.globalPosition; // Store the starting position
+      },
+      onPanStart: (details) {
+        // Optionally, update the starting position if needed
+        RenderBox box = context.findRenderObject() as RenderBox;
+        tapStart ??= calculateGridPosition(box, details.globalPosition);
+        lastKnownPosition = details.globalPosition;
+      },
+      onPanUpdate: (details) {
+        // Update the last known position during the drag
+        lastKnownPosition = details.globalPosition;
+      },
+      onPanEnd: (details) {
+        // Handle the end of a drag or tap
+        if (tapStart != null && lastKnownPosition != null) {
+          RenderBox box = context.findRenderObject() as RenderBox;
+          Offset tapEnd = calculateGridPosition(
+              box, lastKnownPosition!); // Use the last known position
+
+          int fromX = tapStart!.dx.toInt();
+          int fromY = tapStart!.dy.toInt();
+          int toX = tapEnd.dx.toInt();
+          int toY = tapEnd.dy.toInt();
+
+          if (board[fromX][fromY] != 0) {
+            registerHumanMove(fromX, fromY, toX, toY);
+          }
+        }
       },
       child: Container(
         margin: const EdgeInsets.all(1),
@@ -94,27 +150,31 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Lines of Action')),
-      body: Column(
-        children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 8,
+      body: GestureDetector(
+        onPanUpdate: (_) {}, // Intercept gestures to prevent scrolling
+        child: Column(
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(), // Disable scrolling
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 8,
+                ),
+                itemCount: 64,
+                itemBuilder: (context, index) {
+                  int x = index ~/ 8;
+                  int y = index % 8;
+                  return buildSquare(x, y);
+                },
               ),
-              itemCount: 64,
-              itemBuilder: (context, index) {
-                int x = index ~/ 8;
-                int y = index % 8;
-                return buildSquare(x, y);
-              },
             ),
-          ),
-          ElevatedButton(
-            onPressed: getAIMove,
-            child: const Text('Let AI Move'),
-          )
-        ],
+            ElevatedButton(
+              onPressed: getAIMove,
+              child: const Text('Let AI Move'),
+            )
+          ],
+        ),
       ),
     );
   }

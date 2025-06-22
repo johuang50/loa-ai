@@ -3,6 +3,7 @@ from ai.minimax import minimax
 from ai.heuristic import heuristic
 from game.rules import generate_moves
 import copy
+import random
 
 def print_board(board):
     symbols = {0: '.', 1: 'B', -1: 'W'}
@@ -16,7 +17,7 @@ def get_human_move(board, player):
     print("\nAvailable moves:")
     for i, move in move_dict.items():
         print(f"{i}: {move}")
-    choice = '0' #input("Enter move number: ")
+    choice = str(random.randrange(len(move_dict.items()))) #input("Enter move number: ")
     while choice not in move_dict:
         choice = input("Invalid. Enter move number: ")
     return move_dict[choice]
@@ -64,7 +65,7 @@ def main():
         if current_player == human:
             move = get_human_move(board, human)
         else:
-            _, move = minimax(copy.deepcopy(board), depth=3, player=ai, alpha=float('-inf'),
+            _, move = minimax(copy.deepcopy(board), depth=4, player=ai, alpha=float('-inf'),
                               beta=float('inf'), maximizing=True, evaluate=heuristic)
             print("AI chooses:", move)
 

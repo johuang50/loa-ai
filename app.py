@@ -18,7 +18,7 @@ def get_ai_move():
     # Call your existing search algorithm
     _, best_move = minimax(
         board,
-        depth=4,  # Adjust depth as needed
+        depth=3,  # Adjust depth as needed
         alpha=float("-inf"),
         beta=float("inf"),
         maximizing=True,
@@ -30,4 +30,4 @@ def get_ai_move():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)  # Change port if needed
+    app.run(host='127.0.0.1', debug=True, port=5050)  # Change port if needed
