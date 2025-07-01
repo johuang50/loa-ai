@@ -4,11 +4,13 @@ from game.rules import generate_moves
 
 def minimax(board, depth, player, alpha, beta, maximizing, evaluate):
     if depth == 0:
-        return evaluate(board, player), None
+        score, _ = evaluate(board, player)  # Extract only the score
+        return score, None
 
     moves = generate_moves(board, player if maximizing else -player)
     if not moves:
-        return evaluate(board, player), None
+        score, _ = evaluate(board, player)  # Extract only the score
+        return score, None
 
     best_move = None
 

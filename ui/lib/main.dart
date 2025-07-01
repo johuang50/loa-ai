@@ -29,6 +29,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late List<List<int>> board;
   Offset? tapStart;
+  bool isLoading = false; // Add a loading state
 
   @override
   void initState() {
@@ -48,6 +49,10 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> getAIMove() async {
+    setState(() {
+      isLoading = true; // Set loading to true
+    });
+
     final url = Uri.parse('http://127.0.0.1:5050/move'); // Change if hosted elsewhere
     final response = await http.post(
       url,
@@ -61,8 +66,12 @@ class _GameScreenState extends State<GameScreen> {
 
       setState(() {
         applyMove(move[0][0], move[0][1], move[1][0], move[1][1]);
+        isLoading = false; // Set loading to false
       });
     } else {
+      setState(() {
+        isLoading = false; // Set loading to false even on error
+      });
       print('AI error: ${response.body}');
     }
   }
@@ -170,9 +179,12 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: getAIMove,
-              child: const Text('Let AI Move'),
-            )
+              onPressed: isLoading ? null : getAIMove, // Disable button when loading
+              child: isLoading
+                  ? const CircularProgressIndicator() // Show loading indicator
+                  : const Text('Let AI Move'),
+            ),
+            if (!isLoading) const Text('AI Move Completed'), // Show status
           ],
         ),
       ),
